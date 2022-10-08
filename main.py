@@ -7,7 +7,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from os import environ
 from keyboards import *
 
-TOKEN = environ['TOKEN']
+TOKEN = environ['TOKEN_COURSE']
 
 bot = Bot(TOKEN)
 
