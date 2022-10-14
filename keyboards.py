@@ -1,4 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from database import DB
 
 
@@ -6,7 +7,7 @@ def getCourseKeyboard(i: int, isAdmin: bool):
     sub = InlineKeyboardButton('✍ Записаться и перейти к оплате',
                                callback_data=f'subscribe-{i}',
                                url=DB.getCourse(i)[2])
-    back = InlineKeyboardButton('⬅ Назад', callback_data='back')
+    back = InlineKeyboardButton('⬅ Назад', callback_data='courses')
     homepage = InlineKeyboardButton('🏠 На главную', callback_data='homepage')
     courses_keyboard = InlineKeyboardMarkup(resize_keyboard=True)
     if not isAdmin:
@@ -34,17 +35,19 @@ def getEditCourseKeyboard(i: int):
                                  callback_data=f'title-{i}')
     desc = InlineKeyboardButton('Изменить описание',
                                 callback_data=f'description-{i}')
+    src = InlineKeyboardButton('Изменить ссылку',
+                               callback_data=f'source-{i}')
     delete = InlineKeyboardButton('❌ Удалить курс',
                                   callback_data=f'delete-{i}')
-    back = InlineKeyboardButton('⬅ Назад', callback_data='back')
+    back = InlineKeyboardButton('⬅ Назад', callback_data='courses')
     homepage = InlineKeyboardButton('🏠 На главную', callback_data='homepage')
     courses_keyboard = InlineKeyboardMarkup(resize_keyboard=True, row_width=1)
-    return courses_keyboard.add(title, desc).row(delete).row(back, homepage)
+    return courses_keyboard.add(title, desc, src, delete).row(back, homepage)
 
 
 def getAddKeyboard():
     yes = InlineKeyboardButton('Да', callback_data='add_surely')
-    no = InlineKeyboardButton('Нет', callback_data='back')
+    no = InlineKeyboardButton('Нет', callback_data='courses')
     return InlineKeyboardMarkup(resize_keyboard=True).add(yes, no)
 
 
@@ -54,5 +57,16 @@ def getDeleteKeyboard(i: int):
     return InlineKeyboardMarkup(resize_keyboard=True).add(yes, no)
 
 
-main_keyboard = InlineKeyboardButton('Показать курсы', callback_data='courses')
-main_keyboard = InlineKeyboardMarkup(resize_keyboard=True).add(main_keyboard)
+def getBackKb():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    back = KeyboardButton('<- Назад')
+    return markup.add(back)
+
+
+mainKb = InlineKeyboardButton('Показать курсы', callback_data='courses')
+mainKb = InlineKeyboardMarkup(resize_keyboard=True).add(mainKb)
+
+cancel_keyboard = KeyboardButton('Отмена')
+cancel_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(cancel_keyboard)
+
+noneKb = ReplyKeyboardRemove()
