@@ -22,6 +22,7 @@ class Course(StatesGroup):
     source = State()
     description = State()
 
+
 @dp.errors_handler(exception=MessageNotModified)
 async def message_not_modified_handler(*_):
     return True
@@ -61,12 +62,8 @@ async def show_edit(call, text):
     state = dp.current_state(user=call.from_user.id)
     await state.update_data(index=ind)
     await message.delete()
-<<<<<<< HEAD
     await bot.answer_callback_query(call.id)
     await call.message.answer(text, reply_markup=cancelKb)
-=======
-    await call.message.answer(text, reply_markup=cancel_keyboard)
->>>>>>> fea50e3b2be7c6435b78c4cbbff07791a11596c9
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('title'))
@@ -79,7 +76,6 @@ async def show_editTitle(call):
 async def show_editDesc(call):
     await show_edit(call, 'Введите новое описание:')
     await Course.description.set()
-<<<<<<< HEAD
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('source'))
@@ -109,35 +105,6 @@ async def editCourse(message, state, id):
 @dp.message_handler(state=Course.title)
 async def editTitle(message: Message, state):
     await editCourse(message, state, 0)
-=======
-
-
-@dp.callback_query_handler(lambda c: c.data.startswith('source'))
-async def show_editSource(call):
-    await show_edit(call, 'Введите новую ссылку:')
-    await Course.source.set()
-
-
-async def editCourse(message, state, id):
-    async with state.proxy() as data:
-        index = data['index']
-    await state.finish()
-
-    if message.text.lower() != 'отмена':
-        DB.editCourse(index, id, message.text)
-        await message.answer('Изменено', reply_markup=noneKb)
-    else:
-        await message.answer('Отменено', reply_markup=noneKb)
-
-    await message.answer(
-        f"Курс: {DB.getCourse(index)[0]}\n\n"
-        f'{DB.getCourse(index)[1]}',
-        reply_markup=getEditCourseKeyboard(index))
->>>>>>> fea50e3b2be7c6435b78c4cbbff07791a11596c9
-
-@dp.message_handler(state=Course.title)
-async def editTitle(message: Message, state):
-    await editCourse(message, state, 0)
 
 
 @dp.message_handler(state=Course.description)
@@ -147,15 +114,11 @@ async def editDesc(message: Message, state):
 
 @dp.message_handler(state=Course.source)
 async def editSource(message: Message, state):
-<<<<<<< HEAD
     if message.text.lower() == 'отмена' or \
      match(r'^https?:\/\/(www\.)?\w+\.\w+', message.text):
         await editCourse(message, state, 2)
     else:
         await message.answer('Некорректная ссылка!')
-=======
-    await editCourse(message, state, 2)
->>>>>>> fea50e3b2be7c6435b78c4cbbff07791a11596c9
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('course-'))
@@ -209,7 +172,6 @@ async def show_delete(call):
 
 @dp.callback_query_handler(lambda c: c.data == 'courses')
 async def show_courses(call):
-    await bot.answer_callback_query(call.id)
     await courses_page(call)
 
 
