@@ -17,7 +17,7 @@ class COURSES:
     def addCourse(self):
         index = len(self._courses) + 1
         self._courses.append([f'Курс {index}-й', 'Здесь будет расположено'
-                              f' описание {index}-ого Курса', DEFAULT])
+                              f' описание {index}-го Курса', DEFAULT])
         self._save()
 
     def getCourses(self):

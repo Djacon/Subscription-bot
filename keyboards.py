@@ -1,5 +1,10 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+<<<<<<< HEAD
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardRemove
+=======
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+>>>>>>> fea50e3b2be7c6435b78c4cbbff07791a11596c9
 from database import DB
 
 
@@ -39,6 +44,12 @@ def getEditCourseKeyboard(i: int):
                                callback_data=f'source-{i}')
     delete = InlineKeyboardButton('❌ Удалить курс',
                                   callback_data=f'delete-{i}')
+<<<<<<< HEAD
+    back = InlineKeyboardButton('⬅ Назад', callback_data=f'course-{i}')
+    homepage = InlineKeyboardButton('🏠 На главную', callback_data='homepage')
+    courses_keyboard = InlineKeyboardMarkup(resize_keyboard=True, row_width=1)
+    return courses_keyboard.add(title, desc, src, delete).row(back, homepage)
+=======
     back = InlineKeyboardButton('⬅ Назад', callback_data='courses')
     homepage = InlineKeyboardButton('🏠 На главную', callback_data='homepage')
     courses_keyboard = InlineKeyboardMarkup(resize_keyboard=True, row_width=1)
@@ -49,6 +60,7 @@ def getAddKeyboard():
     yes = InlineKeyboardButton('Да', callback_data='add_surely')
     no = InlineKeyboardButton('Нет', callback_data='courses')
     return InlineKeyboardMarkup(resize_keyboard=True).add(yes, no)
+>>>>>>> fea50e3b2be7c6435b78c4cbbff07791a11596c9
 
 
 def getDeleteKeyboard(i: int):
@@ -57,6 +69,23 @@ def getDeleteKeyboard(i: int):
     return InlineKeyboardMarkup(resize_keyboard=True).add(yes, no)
 
 
+<<<<<<< HEAD
+def getAddKeyboard():
+    yes = InlineKeyboardButton('Да', callback_data='add_surely')
+    no = InlineKeyboardButton('Нет', callback_data='courses')
+    return InlineKeyboardMarkup(resize_keyboard=True).add(yes, no)
+
+
+addKb = getAddKeyboard()
+
+mainKb = InlineKeyboardButton('Показать курсы', callback_data='courses')
+mainKb = InlineKeyboardMarkup(resize_keyboard=True).add(mainKb)
+
+cancelKb = KeyboardButton('Отмена')
+cancelKb = ReplyKeyboardMarkup(resize_keyboard=True).add(cancelKb)
+
+noneKb = ReplyKeyboardRemove()
+=======
 def getBackKb():
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
     back = KeyboardButton('<- Назад')
@@ -70,3 +99,4 @@ cancel_keyboard = KeyboardButton('Отмена')
 cancel_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(cancel_keyboard)
 
 noneKb = ReplyKeyboardRemove()
+>>>>>>> fea50e3b2be7c6435b78c4cbbff07791a11596c9
