@@ -4,10 +4,11 @@ from aiogram.utils.exceptions import MessageNotModified
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
+from re import match
 from os import environ
 from keyboards import *
 
-TOKEN = environ['TOKEN_COURSE']
+TOKEN = environ['TOKEN']
 
 bot = Bot(TOKEN)
 
@@ -18,6 +19,7 @@ dp = Dispatcher(bot, storage=storage)
 class Course(StatesGroup):
     index = State()
     title = State()
+    source = State()
     description = State()
 
 
@@ -39,85 +41,91 @@ def isAdmin(message) -> bool:
 @dp.message_handler(commands=['start'])
 async def start(message: Message):
     user = message.from_user.first_name
-    await message.answer(greet(user), reply_markup=main_keyboard)
+    await message.answer(greet(user), reply_markup=mainKb)
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('editCourse'))
 async def show_editCourse(call):
     message = call.message
     index = int(call.data.split('-')[1])
+    await bot.answer_callback_query(call.id)
     await message.edit_text(
         f"Курс: {DB.getCourse(index)[0]}\n\n"
         f'{DB.getCourse(index)[1]}',
         reply_markup=getEditCourseKeyboard(index))
 
 
-@dp.callback_query_handler(lambda c: c.data.startswith('title'))
-async def show_editTitle(call):
+async def show_edit(call, text):
     message = call.message
     ind = int(call.data.split('-')[1])
 
     state = dp.current_state(user=call.from_user.id)
     await state.update_data(index=ind)
+    await message.delete()
+    await bot.answer_callback_query(call.id)
+    await call.message.answer(text, reply_markup=cancelKb)
 
+
+@dp.callback_query_handler(lambda c: c.data.startswith('title'))
+async def show_editTitle(call):
+    await show_edit(call, 'Введите новый заголовок:')
     await Course.title.set()
-    await message.edit_text('Введите новый заголовок'
-                            ' (Введите `отмена`, чтобы выйти):')
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('description'))
-async def show_editTitle(call):
-    message = call.message
-    ind = int(call.data.split('-')[1])
-
-    state = dp.current_state(user=call.from_user.id)
-    await state.update_data(index=ind)
-
+async def show_editDesc(call):
+    await show_edit(call, 'Введите новое описание:')
     await Course.description.set()
-    await message.edit_text('Введите новое описание'
-                            ' (Введите `отмена`, чтобы выйти):')
+
+
+@dp.callback_query_handler(lambda c: c.data.startswith('source'))
+async def show_editSource(call):
+    await show_edit(call, 'Введите новую ссылку\n'
+                    '(ссылка должна быть в формате https://site.ru):')
+    await Course.source.set()
+
+
+async def editCourse(message, state, id):
+    async with state.proxy() as data:
+        index = data['index']
+    await state.finish()
+
+    if message.text.lower() != 'отмена':
+        DB.editCourse(index, id, message.text)
+        await message.answer('Изменено', reply_markup=noneKb)
+    else:
+        await message.answer('Отменено', reply_markup=noneKb)
+
+    await message.answer(
+        f"Курс: {DB.getCourse(index)[0]}\n\n"
+        f'{DB.getCourse(index)[1]}',
+        reply_markup=getEditCourseKeyboard(index))
 
 
 @dp.message_handler(state=Course.title)
-async def scheduleDay(message: Message, state):
-    async with state.proxy() as data:
-        index = data['index']
-    await state.finish()
-
-    if message.text.lower() != 'отмена':
-        DB.editCourse(index, 0, message.text)
-        await message.answer('Изменено')
-    else:
-        await message.answer('Отменено')
-
-    await message.answer(
-        f"Курс: {DB.getCourse(index)[0]}\n\n"
-        f'{DB.getCourse(index)[1]}',
-        reply_markup=getEditCourseKeyboard(index))
+async def editTitle(message: Message, state):
+    await editCourse(message, state, 0)
 
 
 @dp.message_handler(state=Course.description)
-async def scheduleDay(message: Message, state):
-    async with state.proxy() as data:
-        index = data['index']
-    await state.finish()
+async def editDesc(message: Message, state):
+    await editCourse(message, state, 1)
 
-    if message.text.lower() != 'отмена':
-        DB.editCourse(index, 1, message.text)
-        await message.answer('Изменено')
+
+@dp.message_handler(state=Course.source)
+async def editSource(message: Message, state):
+    if message.text.lower() == 'отмена' or \
+     match(r'^https?:\/\/(www\.)?\w+\.\w+', message.text):
+        await editCourse(message, state, 2)
     else:
-        await message.answer('Отменено')
-
-    await message.answer(
-        f"Курс: {DB.getCourse(index)[0]}\n\n"
-        f'{DB.getCourse(index)[1]}',
-        reply_markup=getEditCourseKeyboard(index))
+        await message.answer('Некорректная ссылка!')
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('course-'))
 async def show_course(call):
     message = call.message
     index = int(call.data.split('-')[1])
+    await bot.answer_callback_query(call.id)
     await message.edit_text(
         f"Курс: {DB.getCourse(index)[0]}\n\n"
         f'{DB.getCourse(index)[1]}',
@@ -126,6 +134,7 @@ async def show_course(call):
 
 async def courses_page(call):
     message = call.message
+    await bot.answer_callback_query(call.id)
     await message.edit_text(
         'Список предстоящих курсов:\n\n' +
         '\n\n'.join([f"{i+1}. {x[0]}" for i, x in enumerate(DB.getCourses())]),
@@ -135,8 +144,8 @@ async def courses_page(call):
 @dp.callback_query_handler(lambda c: c.data == 'add')
 async def show_add(call):
     message = call.message
-    await message.edit_text('Вы хотите создать курс?',
-                            reply_markup=getAddKeyboard())
+    await bot.answer_callback_query(call.id)
+    await message.edit_text('Вы хотите создать курс?', reply_markup=addKb)
 
 
 @dp.callback_query_handler(lambda c: c.data == 'add_surely')
@@ -156,11 +165,12 @@ async def show_delete(call):
 async def show_delete(call):
     message = call.message
     index = int(call.data.split('-')[1])
+    await bot.answer_callback_query(call.id)
     await message.edit_text('Вы точно уверены, что хотите удалить курс?',
                             reply_markup=getDeleteKeyboard(index))
 
 
-@dp.callback_query_handler(lambda c: c.data in ['courses', 'back'])
+@dp.callback_query_handler(lambda c: c.data == 'courses')
 async def show_courses(call):
     await courses_page(call)
 
@@ -168,7 +178,8 @@ async def show_courses(call):
 @dp.callback_query_handler(lambda c: c.data == 'homepage')
 async def show_homepage(call):
     user = call.from_user.first_name
-    await call.message.edit_text(greet(user), reply_markup=main_keyboard)
+    await bot.answer_callback_query(call.id)
+    await call.message.edit_text(greet(user), reply_markup=mainKb)
 
 
 if __name__ == '__main__':
